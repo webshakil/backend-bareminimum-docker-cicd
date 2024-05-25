@@ -23,12 +23,12 @@ jobs:
         run: npm ci
 
       - name: Build Docker Image
-        run: docker build -t shakilpro/final-udemy-mern-typescript-backend:latest .
+        run: docker build -t shakilpro/bareminimum-mern-backend:latest .
 
       - name: Push Docker Image to Docker Hub new runner
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-          docker push shakilpro/final-udemy-mern-typescript-backend:latest
+          docker push shakilpro/bareminimum-mern-backend:latest
 
   deploy:
     runs-on: self-hosted
@@ -41,19 +41,19 @@ jobs:
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Pull Image from Docker Hub
-        run: docker pull shakilpro/final-udemy-mern-typescript-backend:latest
+        run: docker pull shakilpro/bareminimum-mern-backend:latest
 
       - name: Delete Old Container and try
         run: |
           if [ $(docker ps -aq -f name=finaludemy-backend-container) ]; then
-            docker rm -f finaludemy-backend-container
+            docker rm -f bareminimum-backend-container
           fi
 
       - name: Run Docker Container
         run: |
-          docker run -d -p 8001:8001 --name finaludemy-backend-container \
+          docker run -d -p 8000:8000 --name bareminimum-backend-container \
             -e MONGO_USERNAME="${{ secrets.MONGO_USERNAME }}" \
             -e MONGO_PASSWORD="${{ secrets.MONGO_PASSWORD }}" \
             -e MONGO_DB_NAME="${{ secrets.MONGO_DB_NAME }}" \
             -e PORT="${{ secrets.PORT }}" \
-            shakilpro/final-udemy-mern-typescript-backend:latest
+            shakilpro/bareminimum-mern-backend:latest
