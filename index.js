@@ -92,7 +92,7 @@ const User = mongoose.model('User', UserSchema);
 
 // Routes
 app.get('/health', (req, res) => {
-  res.send('Server Health is ok');
+  res.send('Server Health is ok and fine');
 });
 
 // Create user
