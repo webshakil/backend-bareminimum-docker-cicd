@@ -1,0 +1,59 @@
+name: Deploy backend-udemy-cicd-merntypescript-docker
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+      - name: Use Node.js 20
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Docker Image
+        run: docker build -t shakilpro/final-udemy-mern-typescript-backend:latest .
+
+      - name: Push Docker Image to Docker Hub new runner
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          docker push shakilpro/final-udemy-mern-typescript-backend:latest
+
+  deploy:
+    runs-on: self-hosted
+    needs: build
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Pull Image from Docker Hub
+        run: docker pull shakilpro/final-udemy-mern-typescript-backend:latest
+
+      - name: Delete Old Container and try
+        run: |
+          if [ $(docker ps -aq -f name=finaludemy-backend-container) ]; then
+            docker rm -f finaludemy-backend-container
+          fi
+
+      - name: Run Docker Container
+        run: |
+          docker run -d -p 8001:8001 --name finaludemy-backend-container \
+            -e MONGO_USERNAME="${{ secrets.MONGO_USERNAME }}" \
+            -e MONGO_PASSWORD="${{ secrets.MONGO_PASSWORD }}" \
+            -e MONGO_DB_NAME="${{ secrets.MONGO_DB_NAME }}" \
+            -e PORT="${{ secrets.PORT }}" \
+            shakilpro/final-udemy-mern-typescript-backend:latest
